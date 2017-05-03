@@ -128,6 +128,7 @@ public class HeroController : MonoBehaviour {
                     touchMove.y = Input.touches[0].position.y;
                     touchDown = true;
                     showGuide = true;
+                    transform.GetChild(0).GetComponent<Animation>().Play("charge");
                 }
                 else if (Input.touches[0].phase == TouchPhase.Moved && touchDown == true)
                 {
@@ -223,6 +224,7 @@ public class HeroController : MonoBehaviour {
             touchMove.y = Input.mousePosition.y;
             mouseDown = true;
             showGuide = true;
+            transform.GetChild(0).GetComponent<Animation>().Play("charge");
         }
       
     }
@@ -241,7 +243,8 @@ public class HeroController : MonoBehaviour {
 
     public void OnCollisionEnter(Collision collision) {
         isJumping = false;
-
+        transform.GetChild(0).GetComponent<Animation>().Play("down");
+        transform.GetChild(0).GetComponent<Animation>().PlayQueued("ready", QueueMode.CompleteOthers);
         Platform platfrom = collision.gameObject.GetComponent<Platform>();
 
         if (platfrom != null) {
@@ -295,29 +298,29 @@ public class HeroController : MonoBehaviour {
     }
 
 
+
     private void Jump() {
         if (isJumping == false&&isMovingCamera == false && isAlive == true) {
-
-            //Vector3 newVel = new Vector3();
-            //newVel.x = vel.x * cosTheat - vel.z * sinTheat;
-            //newVel.z = vel.z * cosTheat + vel.x * sinTheat;
-
-            rigidbody.velocity = new Vector3(dir.x, velY, dir.z);
+            isJumping = true;
 
             float degree = Mathf.Acos(dir.x / Mathf.Sqrt(dir.x * dir.x + dir.z * dir.z));
-            if (dir.z < 0) {
+            if (dir.z < 0)
+            {
                 degree = -degree;
             }
 
-            Debug.Log("degree="+degree);
+            Debug.Log("degree=" + degree);
 
             if (dir.x > dir.z)
-                transform.rotation = Quaternion.AngleAxis(-degree/Mathf.PI * 180, new Vector3(0, 1, 0));
-            else {
-                transform.rotation = Quaternion.AngleAxis(-degree / Mathf.PI * 180, new Vector3(0, 1, 0) );
+                transform.rotation = Quaternion.AngleAxis(-degree / Mathf.PI * 180, new Vector3(0, 1, 0));
+            else
+            {
+                transform.rotation = Quaternion.AngleAxis(-degree / Mathf.PI * 180, new Vector3(0, 1, 0));
             }
 
-            transform.GetChild(0).GetComponent<Animator>().Play("flip");
+            transform.GetChild(0).GetComponent<Animation>().Play("jump");
+            StartCoroutine("WaitAndJump");
+            
         }
     }
 
@@ -332,7 +335,7 @@ public class HeroController : MonoBehaviour {
         }
         transform.rotation = Quaternion.AngleAxis(0, new Vector3(0, 1, 0));
         this.isJumping = false;
-        gameObject.transform.GetChild(0).GetComponent<MeshCollider>().enabled = true;
+        gameObject.transform.GetComponent<CapsuleCollider>().enabled = true;
         camera.transform.position = deltaPos;
         objs.gameObject.GetComponent<PlatformManager>().Reset();
         Time.timeScale = 1;
@@ -438,5 +441,16 @@ public class HeroController : MonoBehaviour {
                 material.renderQueue = 3000;
                 break;
         }
+    }
+
+    IEnumerator WaitAndJump()
+    {
+        // suspend execution for 5 seconds  
+        yield return new WaitForSeconds(0.1f);
+        //Vector3 newVel = new Vector3();
+        //newVel.x = vel.x * cosTheat - vel.z * sinTheat;
+        //newVel.z = vel.z * cosTheat + vel.x * sinTheat;
+
+        rigidbody.velocity = new Vector3(dir.x, velY, dir.z);
     }
 }
